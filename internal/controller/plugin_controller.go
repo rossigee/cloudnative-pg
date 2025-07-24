@@ -188,11 +188,17 @@ func (r *PluginReconciler) reconcile(
 
 	pluginAddress := fmt.Sprintf("%s:%d", service.Name, pluginPort)
 
+	// Check for custom TLS ServerName annotation
+	serverName := service.Name
+	if customServerName := service.Annotations[utils.PluginServerNameAnnotationName]; len(customServerName) > 0 {
+		serverName = customServerName
+	}
+
 	err = r.Plugins.RegisterRemotePlugin(
 		pluginName,
 		pluginAddress,
 		&tls.Config{
-			ServerName: service.Name,
+			ServerName: serverName,
 			RootCAs:    serverCertificatePool,
 			Certificates: []tls.Certificate{
 				clientKeyPair,

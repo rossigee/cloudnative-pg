@@ -254,6 +254,10 @@ const (
 	// port the plugin is listening to
 	PluginPortAnnotationName = MetadataNamespace + "/pluginPort"
 
+	// PluginServerNameAnnotationName is the name of the annotation containing the
+	// server name to use for TLS verification when connecting to the plugin
+	PluginServerNameAnnotationName = MetadataNamespace + "/pluginServerName"
+
 	// PodPatchAnnotationName is the name of the annotation containing the
 	// patch to apply to the pod
 	PodPatchAnnotationName = MetadataNamespace + "/podPatch"
