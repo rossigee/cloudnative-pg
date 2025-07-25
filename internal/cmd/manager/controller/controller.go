@@ -155,14 +155,10 @@ func RunController(
 	}
 
 	webhookServer := mgr.GetWebhookServer().(*webhook.DefaultServer)
-	if conf.WebhookCertDir != "" {
-		// Use certificate names compatible with OLM
-		webhookServer.Options.CertName = "apiserver.crt"
-		webhookServer.Options.KeyName = "apiserver.key"
-	} else {
-		webhookServer.Options.CertName = "tls.crt"
-		webhookServer.Options.KeyName = "tls.key"
-	}
+	// Always use standard Kubernetes certificate names regardless of WEBHOOK_CERT_DIR
+	// This ensures compatibility with cert-manager and other standard certificate providers
+	webhookServer.Options.CertName = "tls.crt"
+	webhookServer.Options.KeyName = "tls.key"
 
 	// kubeClient is the kubernetes client set with
 	// support for the apiextensions that is used
