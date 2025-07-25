@@ -195,18 +195,26 @@ func RunController(
 
 	webhookServer := mgr.GetWebhookServer().(*webhook.DefaultServer)
 
-	// Use intelligent certificate selection that falls back to standard names
-	// This provides compatibility with both custom certificate providers and cert-manager
-	certName, keyName, err := selectWebhookCertificateNames(conf.WebhookCertDir)
-	if err != nil {
-		// Fallback to standard Kubernetes certificate names for compatibility
-		// with cert-manager and other standard certificate providers
-		setupLog.Info("Falling back to standard certificate names", "reason", err.Error())
-		certName = "tls.crt"
-		keyName = "tls.key"
+	// Use intelligent certificate selection when custom cert directory is specified,
+	// otherwise use standard Kubernetes certificate names for compatibility
+	if conf.WebhookCertDir != "" {
+		// Custom certificate directory specified - use intelligent selection
+		// This provides compatibility with custom certificate providers like OLM
+		certName, keyName, err := selectWebhookCertificateNames(conf.WebhookCertDir)
+		if err != nil {
+			// Fallback to standard names if intelligent selection fails
+			setupLog.Info("Falling back to standard certificate names", "reason", err.Error())
+			certName = "tls.crt"
+			keyName = "tls.key"
+		}
+		webhookServer.Options.CertName = certName
+		webhookServer.Options.KeyName = keyName
+	} else {
+		// No custom cert directory - always use standard Kubernetes certificate names
+		// This ensures compatibility with cert-manager and other standard certificate providers
+		webhookServer.Options.CertName = "tls.crt"
+		webhookServer.Options.KeyName = "tls.key"
 	}
-	webhookServer.Options.CertName = certName
-	webhookServer.Options.KeyName = keyName
 
 	// kubeClient is the kubernetes client set with
 	// support for the apiextensions that is used
