@@ -51,6 +51,7 @@ BootstrapPgBaseBackup
 BootstrapRecovery
 Burstable
 ByStatus
+CAs
 CIS
 CKA
 CN
@@ -166,6 +167,9 @@ ExtensionStatus
 ExternalCluster
 FQDN
 FQDNs
+FailoverQuorum
+FailoverQuorumSpec
+FailoverQuorumStatus
 Fei
 Filesystem
 Fluentd
@@ -371,6 +375,7 @@ ProbeTerminationGracePeriod
 ProbeWithStrategy
 ProbesConfiguration
 ProjectedVolumeSource
+Promotable
 PublicationReclaimPolicy
 PublicationSpec
 PublicationStatus
@@ -383,6 +388,7 @@ PushSecret
 QoS
 Quaresima
 QuickStart
+QuorumFailoverProtection
 RBAC
 README
 RHSA
@@ -470,6 +476,8 @@ SnapshotType
 Snapshotting
 Snyk
 Stackgres
+StandbyNames
+StandbyNumber
 StartupProbe
 StartupStrategyType
 StatefulSets
@@ -487,6 +495,7 @@ SynchronizeReplicas
 SynchronizeReplicasConfiguration
 SynchronousReplicaConfiguration
 SynchronousReplicaConfigurationMethod
+SynchronousStandbyNamesList
 Synopsys
 SystemID
 TCP
@@ -824,6 +833,7 @@ externalclusters
 facto
 failover
 failoverDelay
+failoverquorums
 failovers
 failureThreshold
 faq
@@ -1028,6 +1038,7 @@ msg
 mspan
 multinamespace
 mutatingwebhookconfigurations
+mutex
 myAKSCluster
 myResourceGroup
 namespace
@@ -1113,6 +1124,7 @@ pgpass
 pgstatstatements
 phaseReason
 pid
+pinger
 pitr
 plpgsql
 pluggable
@@ -1166,6 +1178,7 @@ programmatically
 proj
 projectedVolumeTemplate
 prometheus
+promotable
 promotionTimeout
 promotionToken
 provisioner
@@ -1181,6 +1194,7 @@ pvcTemplate
 quantile
 queryable
 quickstart
+quorumFailoverProtection
 rbac
 rc
 readService
@@ -1307,8 +1321,10 @@ sslkey
 sslmode
 sslrootcert
 sso
+standbyNames
 standbyNamesPost
 standbyNamesPre
+standbyNumber
 startDelay
 startedAt
 stateful

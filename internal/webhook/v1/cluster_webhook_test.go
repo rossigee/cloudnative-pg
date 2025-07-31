@@ -5607,3 +5607,268 @@ var _ = Describe("getRetentionPolicyWarnings", func() {
 		Expect(warnings).To(HaveLen(1))
 	})
 })
+
+var _ = Describe("getStorageWarnings", func() {
+	It("returns no warnings when storage is properly configured", func() {
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					Size: "1Gi",
+				},
+			},
+		}
+		Expect(getStorageWarnings(cluster)).To(BeEmpty())
+	})
+
+	It("returns no warnings when PVC template has storage configured", func() {
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+		}
+		Expect(getStorageWarnings(cluster)).To(BeEmpty())
+	})
+
+	It("returns a warning when both storageClass and storageClassName are specified", func() {
+		storageClass := "fast-ssd"
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					StorageClass: &storageClass,
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						StorageClassName: &storageClass,
+					},
+				},
+			},
+		}
+		warnings := getStorageWarnings(cluster)
+		Expect(warnings).To(HaveLen(1))
+		Expect(warnings[0]).To(ContainSubstring("spec.storage.storageClass"))
+		Expect(warnings[0]).To(ContainSubstring("spec.storage.pvcTemplate.storageClassName"))
+		Expect(warnings[0]).To(ContainSubstring("spec.storage.storageClass value will be used"))
+	})
+
+	It("returns a warning when both size and storage requests are specified", func() {
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					Size: "1Gi",
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("2Gi"),
+							},
+						},
+					},
+				},
+			},
+		}
+		warnings := getStorageWarnings(cluster)
+		Expect(warnings).To(HaveLen(1))
+		Expect(warnings[0]).To(ContainSubstring("spec.storage.size"))
+		Expect(warnings[0]).To(ContainSubstring("spec.storage.pvcTemplate.resources.requests.storage"))
+		Expect(warnings[0]).To(ContainSubstring("spec.storage.size value will be used"))
+	})
+
+	It("returns multiple warnings when both storage conflicts exist", func() {
+		storageClass := "fast-ssd"
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					Size:         "1Gi",
+					StorageClass: &storageClass,
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						StorageClassName: &storageClass,
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("2Gi"),
+							},
+						},
+					},
+				},
+			},
+		}
+		warnings := getStorageWarnings(cluster)
+		Expect(warnings).To(HaveLen(2))
+		Expect(warnings[0]).To(ContainSubstring("storageClass"))
+		Expect(warnings[1]).To(ContainSubstring("size"))
+	})
+
+	It("returns warnings for WAL storage configuration conflicts", func() {
+		storageClass := "fast-ssd"
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				WalStorage: &apiv1.StorageConfiguration{
+					Size:         "500Mi",
+					StorageClass: &storageClass,
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						StorageClassName: &storageClass,
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+		}
+		warnings := getStorageWarnings(cluster)
+		Expect(warnings).To(HaveLen(2))
+		Expect(warnings[0]).To(ContainSubstring("spec.walStorage.storageClass"))
+		Expect(warnings[1]).To(ContainSubstring("spec.walStorage.size"))
+	})
+
+	It("returns warnings for both storage and WAL storage conflicts", func() {
+		storageClass := "fast-ssd"
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					Size:         "1Gi",
+					StorageClass: &storageClass,
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						StorageClassName: &storageClass,
+					},
+				},
+				WalStorage: &apiv1.StorageConfiguration{
+					Size: "500Mi",
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse("1Gi"),
+							},
+						},
+					},
+				},
+			},
+		}
+		warnings := getStorageWarnings(cluster)
+		Expect(warnings).To(HaveLen(2))
+		Expect(warnings[0]).To(ContainSubstring("spec.storage"))
+		Expect(warnings[1]).To(ContainSubstring("spec.walStorage"))
+	})
+
+	It("returns no warnings when WAL storage is nil", func() {
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					Size: "1Gi",
+				},
+				WalStorage: nil,
+			},
+		}
+		Expect(getStorageWarnings(cluster)).To(BeEmpty())
+	})
+
+	It("returns no warnings when PVC template is nil", func() {
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					Size:                          "1Gi",
+					PersistentVolumeClaimTemplate: nil,
+				},
+			},
+		}
+		Expect(getStorageWarnings(cluster)).To(BeEmpty())
+	})
+
+	It("returns no warnings when storage requests are zero", func() {
+		cluster := &apiv1.Cluster{
+			Spec: apiv1.ClusterSpec{
+				StorageConfiguration: apiv1.StorageConfiguration{
+					Size: "1Gi",
+					PersistentVolumeClaimTemplate: &corev1.PersistentVolumeClaimSpec{
+						Resources: corev1.VolumeResourceRequirements{
+							Requests: corev1.ResourceList{},
+						},
+					},
+				},
+			},
+		}
+		Expect(getStorageWarnings(cluster)).To(BeEmpty())
+	})
+})
+
+var _ = Describe("failoverQuorum validation", func() {
+	var v *ClusterCustomValidator
+	BeforeEach(func() {
+		v = &ClusterCustomValidator{}
+	})
+
+	It("fails if it is active but no synchronous replication is configured", func() {
+		cluster := &apiv1.Cluster{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					utils.FailoverQuorumAnnotationName: "t",
+				},
+			},
+			Spec: apiv1.ClusterSpec{
+				Instances: 3,
+			},
+		}
+
+		errList := v.validateFailoverQuorum(cluster)
+		Expect(errList).To(HaveLen(1))
+	})
+
+	It("requires at least three instances", func() {
+		cluster := &apiv1.Cluster{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					utils.FailoverQuorumAnnotationName: "t",
+				},
+			},
+			Spec: apiv1.ClusterSpec{
+				Instances: 3,
+				PostgresConfiguration: apiv1.PostgresConfiguration{
+					Synchronous: &apiv1.SynchronousReplicaConfiguration{
+						Number: 1,
+					},
+				},
+			},
+		}
+
+		errList := v.validateFailoverQuorum(cluster)
+		Expect(errList).To(BeEmpty())
+
+		cluster.Spec.Instances = 2
+		errList = v.validateFailoverQuorum(cluster)
+		Expect(errList).To(HaveLen(1))
+	})
+
+	It("check if the number of external synchronous replicas is coherent", func() {
+		cluster := &apiv1.Cluster{
+			ObjectMeta: metav1.ObjectMeta{
+				Annotations: map[string]string{
+					utils.FailoverQuorumAnnotationName: "t",
+				},
+			},
+			Spec: apiv1.ClusterSpec{
+				Instances: 3,
+				PostgresConfiguration: apiv1.PostgresConfiguration{
+					Synchronous: &apiv1.SynchronousReplicaConfiguration{
+						Number: 1,
+						StandbyNamesPre: []string{
+							"one",
+							"two",
+						},
+						StandbyNamesPost: []string{
+							"three",
+							"four",
+						},
+					},
+				},
+			},
+		}
+
+		errList := v.validateFailoverQuorum(cluster)
+		Expect(errList).To(HaveLen(1))
+	})
+})

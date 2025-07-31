@@ -81,8 +81,8 @@ following excerpt taken from `pg_hba.conf`:
 
 ```
 # Require client certificate authentication for the streaming_replica user
-hostssl postgres streaming_replica all cert
-hostssl replication streaming_replica all cert
+hostssl postgres streaming_replica all cert map=cnpg_streaming_replica
+hostssl replication streaming_replica all cert map=cnpg_streaming_replica
 ```
 
 !!! Seealso "Certificates"
@@ -120,6 +120,11 @@ CloudNativePG supports both
     than strict data durability in your setup, this setting can be adjusted. For
     details on managing this behavior, refer to the [Data Durability and Synchronous Replication](#data-durability-and-synchronous-replication)
     section.
+
+!!! Important
+    The [*failover quorum* feature](failover.md#failover-quorum-quorum-based-failover) (experimental)
+    can be used alongside synchronous replication to improve data durability
+    and safety during failover events.
 
 Direct configuration of the `synchronous_standby_names` option is not
 permitted. However, CloudNativePG automatically populates this option with the
