@@ -135,3 +135,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v6 v6.3.0 // indirect
 )
 
+// Use fixed cnpg-i-machinery with client certificate authentication fix
+replace github.com/cloudnative-pg/cnpg-i-machinery => github.com/rossigee/cnpg-i-machinery v0.4.1
