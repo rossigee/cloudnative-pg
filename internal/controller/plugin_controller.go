@@ -40,6 +40,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/cloudnative-pg/cloudnative-pg/internal/cnpi/plugin/repository"
+	"github.com/cloudnative-pg/cloudnative-pg/pkg/certs"
 	"github.com/cloudnative-pg/cloudnative-pg/pkg/utils"
 )
 
@@ -172,7 +173,7 @@ func (r *PluginReconciler) reconcile(
 	}
 
 	serverCertificatePool := x509.NewCertPool()
-	if ok := serverCertificatePool.AppendCertsFromPEM(serverSecret.Data[corev1.TLSCertKey]); !ok {
+	if ok := serverCertificatePool.AppendCertsFromPEM(serverSecret.Data[certs.CACertKey]); !ok {
 		// Unfortunately, by doing that, we loose the certificate parsing error
 		// and we don't know if the problem lies in the PEM block or in the DER content
 		err := fmt.Errorf("parsing error")
