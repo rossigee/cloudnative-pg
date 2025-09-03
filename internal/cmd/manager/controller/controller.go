@@ -210,6 +210,7 @@ func RunController(
 			keyName = "tls.key"
 		}
 	}
+	}
 	webhookServer.Options.CertName = certName
 	webhookServer.Options.KeyName = keyName
 
