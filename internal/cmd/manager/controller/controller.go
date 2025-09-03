@@ -24,6 +24,8 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/cloudnative-pg/machinery/pkg/log"
@@ -82,6 +84,43 @@ type leaderElectionConfiguration struct {
 	enable        bool
 	leaseDuration time.Duration
 	renewDeadline time.Duration
+}
+
+// selectWebhookCertificateNames determines which certificate files to use for webhooks.
+// It checks if apiserver.crt and apiserver.key exist first, then falls back to tls.crt and tls.key.
+func selectWebhookCertificateNames(webhookCertDir string) (certName, keyName string, err error) {
+	// Determine certificate directory to check
+	certDir := webhookCertDir
+	if certDir == "" {
+		certDir = defaultWebhookCertDir
+	}
+
+	// Certificate prefixes in priority order
+	prefixes := []string{"apiserver", "tls"}
+
+	for _, prefix := range prefixes {
+		certPath := filepath.Join(certDir, prefix+".crt")
+		keyPath := filepath.Join(certDir, prefix+".key")
+
+		// Check if both certificate and key exist
+		if _, err := os.Stat(certPath); err == nil {
+			if _, err := os.Stat(keyPath); err == nil {
+				// Complete certificate pair found
+				setupLog.Info("Using certificate pair", "prefix", prefix, "certPath", certPath, "keyPath", keyPath)
+				return prefix + ".crt", prefix + ".key", nil
+			}
+			// Certificate exists but key is missing
+			setupLog.Info("Certificate found but key missing", "prefix", prefix, "certPath", certPath, "missingKeyPath", keyPath)
+		} else {
+			// Certificate doesn't exist
+			setupLog.Info("Certificate not found", "prefix", prefix, "missingCertPath", certPath)
+		}
+	}
+
+	// No valid certificate pair found
+	err = fmt.Errorf("no valid certificate pair found in directory %s (checked prefixes: %v)", certDir, prefixes)
+	setupLog.Error(err, "Certificate validation failed")
+	return "", "", err
 }
 
 // RunController is the main procedure of the operator, and is used as the
@@ -155,10 +194,14 @@ func RunController(
 	}
 
 	webhookServer := mgr.GetWebhookServer().(*webhook.DefaultServer)
-	// Always use standard Kubernetes certificate names regardless of WEBHOOK_CERT_DIR
-	// This ensures compatibility with cert-manager and other standard certificate providers
-	webhookServer.Options.CertName = "tls.crt"
-	webhookServer.Options.KeyName = "tls.key"
+
+	certName, keyName, err := selectWebhookCertificateNames(conf.WebhookCertDir)
+	if err != nil {
+		setupLog.Error(err, "failed to select webhook certificate names")
+		return err
+	}
+	webhookServer.Options.CertName = certName
+	webhookServer.Options.KeyName = keyName
 
 	// kubeClient is the kubernetes client set with
 	// support for the apiextensions that is used
