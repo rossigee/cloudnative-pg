@@ -376,14 +376,25 @@ func CreateRootCA(commonName string, organizationalUnit string) (*KeyPair, error
 
 // ParseCASecret parse a CA secret to a key pair
 func ParseCASecret(secret *corev1.Secret) (*KeyPair, error) {
-	privateKey, ok := secret.Data[CAPrivateKeyKey]
+	var privateKey, publicKey []byte
+	var ok bool
+
+	// Try to get the private key using ca.key first, then fallback to tls.key
+	privateKey, ok = secret.Data[CAPrivateKeyKey]
 	if !ok {
-		return nil, fmt.Errorf("missing %s secret data", CAPrivateKeyKey)
+		privateKey, ok = secret.Data[TLSPrivateKeyKey]
+		if !ok {
+			return nil, fmt.Errorf("missing %s or %s secret data", CAPrivateKeyKey, TLSPrivateKeyKey)
+		}
 	}
 
-	publicKey, ok := secret.Data[CACertKey]
+	// Try to get the certificate using ca.crt first, then fallback to tls.crt
+	publicKey, ok = secret.Data[CACertKey]
 	if !ok {
-		return nil, fmt.Errorf("missing %s secret data", CACertKey)
+		publicKey, ok = secret.Data[TLSCertKey]
+		if !ok {
+			return nil, fmt.Errorf("missing %s or %s secret data", CACertKey, TLSCertKey)
+		}
 	}
 
 	// Verify the key matches the certificate
