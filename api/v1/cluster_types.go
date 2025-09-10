@@ -1989,7 +1989,8 @@ type StorageConfiguration struct {
 
 	// Size of the storage. Required if not already specified in the PVC template.
 	// Changes to this field are automatically reapplied to the created PVCs.
-	// Size cannot be decreased.
+	// Size increases are applied to existing PVCs. Size decreases require the
+	// AllowVolumeDownsizing flag and only apply to new replicas.
 	// +optional
 	Size string `json:"size,omitempty"`
 
@@ -1997,6 +1998,13 @@ type StorageConfiguration struct {
 	// +optional
 	// +kubebuilder:default:=true
 	ResizeInUseVolumes *bool `json:"resizeInUseVolumes,omitempty"`
+
+	// Allow volume size reduction for new replicas, defaults to false.
+	// When enabled, reduced storage sizes will apply only to newly created
+	// replicas, allowing users to rotate away oversized volumes.
+	// +optional
+	// +kubebuilder:default:=false
+	AllowVolumeDownsizing *bool `json:"allowVolumeDownsizing,omitempty"`
 
 	// Template to be used to generate the Persistent Volume Claim
 	// +optional

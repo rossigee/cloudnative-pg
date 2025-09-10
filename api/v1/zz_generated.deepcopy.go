@@ -825,6 +825,16 @@ func (in *ClusterSpec) DeepCopyInto(out *ClusterSpec) {
 		*out = new(corev1.SeccompProfile)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.PodSecurityContext != nil {
+		in, out := &in.PodSecurityContext, &out.PodSecurityContext
+		*out = new(corev1.PodSecurityContext)
+		(*in).DeepCopyInto(*out)
+	}
+	if in.SecurityContext != nil {
+		in, out := &in.SecurityContext, &out.SecurityContext
+		*out = new(corev1.SecurityContext)
+		(*in).DeepCopyInto(*out)
+	}
 	if in.Tablespaces != nil {
 		in, out := &in.Tablespaces, &out.Tablespaces
 		*out = make([]TablespaceConfiguration, len(*in))
@@ -3124,6 +3134,11 @@ func (in *StorageConfiguration) DeepCopyInto(out *StorageConfiguration) {
 	}
 	if in.ResizeInUseVolumes != nil {
 		in, out := &in.ResizeInUseVolumes, &out.ResizeInUseVolumes
+		*out = new(bool)
+		**out = **in
+	}
+	if in.AllowVolumeDownsizing != nil {
+		in, out := &in.AllowVolumeDownsizing, &out.AllowVolumeDownsizing
 		*out = new(bool)
 		**out = **in
 	}
