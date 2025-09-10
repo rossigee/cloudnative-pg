@@ -1761,7 +1761,11 @@ func validateStorageConfigurationChange(
 			field.Invalid(
 				structPath,
 				newSize,
-				fmt.Sprintf("can't shrink existing storage from %v to %v without enabling allowVolumeDownsizing", oldSize, newSize)),
+				fmt.Sprintf(
+					"can't shrink existing storage from %v to %v without enabling allowVolumeDownsizing",
+					oldSize,
+					newSize,
+				)),
 		}
 	}
 
