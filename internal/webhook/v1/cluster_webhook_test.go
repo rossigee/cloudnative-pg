@@ -3909,7 +3909,7 @@ var _ = Describe("Storage configuration validation", func() {
 			allowDownsizing := true
 			oldStorage := apiv1.StorageConfiguration{Size: "10Gi"}
 			newStorage := apiv1.StorageConfiguration{
-				Size:                   "5Gi",
+				Size:                  "5Gi",
 				AllowVolumeDownsizing: &allowDownsizing,
 			}
 
