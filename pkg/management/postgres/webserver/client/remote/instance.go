@@ -193,11 +193,10 @@ func (r *instanceClientImpl) GetPgControlDataFromInstance(
 	contextLogger := log.FromContext(ctx)
 
 	scheme := GetStatusSchemeFromPod(pod)
-	// Use read-write service DNS name instead of IP for proper TLS certificate validation
-	// This matches the DNS names in the TLS certificates: {cluster-name}-rw.{namespace}.svc.cluster.local
+	// Use pod FQDN instead of IP for proper TLS certificate validation
 	var hostname string
 	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
-		hostname = fmt.Sprintf("%s-rw.%s.svc.cluster.local", cluster.Name, pod.Namespace)
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
 	} else {
 		// Fallback to pod IP if cluster context is not available
 		hostname = pod.Status.PodIP
@@ -260,11 +259,10 @@ func (r *instanceClientImpl) UpgradeInstanceManager(
 	}()
 
 	scheme := GetStatusSchemeFromPod(pod)
-	// Use read-write service DNS name instead of IP for proper TLS certificate validation
-	// This matches the DNS names in the TLS certificates: {cluster-name}-rw.{namespace}.svc.cluster.local
+	// Use pod FQDN instead of IP for proper TLS certificate validation
 	var hostname string
 	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
-		hostname = fmt.Sprintf("%s-rw.%s.svc.cluster.local", cluster.Name, pod.Namespace)
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
 	} else {
 		// Fallback to pod IP if cluster context is not available
 		hostname = pod.Status.PodIP
@@ -318,11 +316,11 @@ func (r *instanceClientImpl) rawInstanceStatusRequest(
 	pod corev1.Pod,
 ) (result postgres.PostgresqlStatus) {
 	scheme := GetStatusSchemeFromPod(&pod)
-	// Use headless service DNS name instead of IP for proper TLS certificate validation
-	// Format: {cluster-name}-headless.{namespace}.svc.cluster.local
+	// Use pod FQDN instead of IP for proper TLS certificate validation
+	// Format: {pod-name}.{cluster-name}-headless.{namespace}.svc.cluster.local
 	var hostname string
 	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
-		hostname = fmt.Sprintf("%s-headless.%s.svc.cluster.local", cluster.Name, pod.Namespace)
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
 	} else {
 		// Fallback to pod IP if cluster context is not available
 		hostname = pod.Status.PodIP
@@ -409,11 +407,10 @@ func (r *instanceClientImpl) ArchivePartialWAL(ctx context.Context, pod *corev1.
 	contextLogger := log.FromContext(ctx)
 
 	scheme := GetStatusSchemeFromPod(pod)
-	// Use read-write service DNS name instead of IP for proper TLS certificate validation
-	// This matches the DNS names in the TLS certificates: {cluster-name}-rw.{namespace}.svc.cluster.local
+	// Use pod FQDN instead of IP for proper TLS certificate validation
 	var hostname string
 	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
-		hostname = fmt.Sprintf("%s-rw.%s.svc.cluster.local", cluster.Name, pod.Namespace)
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
 	} else {
 		// Fallback to pod IP if cluster context is not available
 		hostname = pod.Status.PodIP
