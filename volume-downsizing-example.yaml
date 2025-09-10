@@ -1,0 +1,55 @@
+# Example: Volume Downsizing for Replica Rotation
+#
+# This feature allows reducing storage volumes size, but only applies to newly created replicas.
+# This enables users to "rotate away" oversized volumes by gradually replacing replicas.
+#
+# Step 1: Original cluster with oversized volumes
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+spec:
+  instances: 3
+  storage:
+    size: 100Gi  # Original large size
+    storageClass: fast-ssd
+
+---
+# Step 2: Enable volume downsizing and reduce size
+# This configuration will:
+# - Validate and accept the reduced size (because allowVolumeDownsizing=true)  
+# - Apply the reduced size ONLY to newly created replicas
+# - Existing PVCs will remain at their original size (100Gi)
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster
+spec:
+  instances: 3
+  storage:
+    size: 50Gi                      # Reduced size
+    allowVolumeDownsizing: true     # Enable the feature
+    storageClass: fast-ssd
+
+---
+# Step 3: For WAL volumes, the same applies
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-cluster-with-wal
+spec:
+  instances: 3
+  storage:
+    size: 50Gi
+    allowVolumeDownsizing: true
+  walStorage:
+    size: 10Gi                      # Reduced WAL size
+    allowVolumeDownsizing: true     # Enable for WAL volumes too
+    storageClass: fast-ssd
+
+# How the rotation works:
+# 1. Apply the configuration with reduced storage size and allowVolumeDownsizing=true
+# 2. Operator will allow the change (previously would reject)
+# 3. When replicas are restarted (rolling update, pod deletion, scaling), new PVCs will use the smaller size
+# 4. Old replicas with large PVCs remain unchanged until they're recreated
+# 5. Gradually, all replicas will have the smaller volume size as they get rotated

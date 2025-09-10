@@ -3137,6 +3137,11 @@ func (in *StorageConfiguration) DeepCopyInto(out *StorageConfiguration) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.AllowVolumeDownsizing != nil {
+		in, out := &in.AllowVolumeDownsizing, &out.AllowVolumeDownsizing
+		*out = new(bool)
+		**out = **in
+	}
 	if in.PersistentVolumeClaimTemplate != nil {
 		in, out := &in.PersistentVolumeClaimTemplate, &out.PersistentVolumeClaimTemplate
 		*out = new(corev1.PersistentVolumeClaimSpec)
