@@ -1650,6 +1650,7 @@ func (v *ClusterCustomValidator) validateStorageChange(r, old *apiv1.Cluster) fi
 		field.NewPath("spec", "storage"),
 		old.Spec.StorageConfiguration,
 		r.Spec.StorageConfiguration,
+		r.AllowsVolumeDownsizing(),
 	)
 }
 
@@ -1671,6 +1672,7 @@ func (v *ClusterCustomValidator) validateWalStorageChange(r, old *apiv1.Cluster)
 		field.NewPath("spec", "walStorage"),
 		*old.Spec.WalStorage,
 		*r.Spec.WalStorage,
+		r.AllowsWalVolumeDownsizing(),
 	)
 }
 
@@ -1698,6 +1700,7 @@ func (v *ClusterCustomValidator) validateTablespacesChange(r, old *apiv1.Cluster
 				field.NewPath("spec", "tablespaces").Index(idx),
 				oldConf.Storage,
 				newConf.Storage,
+				r.AllowsVolumeDownsizing(),
 			)...)
 		} else {
 			errs = append(errs,
@@ -1715,6 +1718,7 @@ func validateStorageConfigurationChange(
 	structPath *field.Path,
 	oldStorage apiv1.StorageConfiguration,
 	newStorage apiv1.StorageConfiguration,
+	allowDownsizing bool,
 ) field.ErrorList {
 	oldSize := oldStorage.GetSizeOrNil()
 	if oldSize == nil {
@@ -1729,16 +1733,24 @@ func validateStorageConfigurationChange(
 		return nil
 	}
 
+	// Allow size increases (existing behavior)
 	if oldSize.AsDec().Cmp(newSize.AsDec()) < 1 {
 		return nil
 	}
 
-	return field.ErrorList{
-		field.Invalid(
-			structPath,
-			newSize,
-			fmt.Sprintf("can't shrink existing storage from %v to %v", oldSize, newSize)),
+	// Size is being reduced - check if downsizing is allowed
+	if !allowDownsizing {
+		return field.ErrorList{
+			field.Invalid(
+				structPath,
+				newSize,
+				fmt.Sprintf("can't shrink existing storage from %v to %v without enabling allowVolumeDownsizing", oldSize, newSize)),
+		}
 	}
+
+	// Size is being reduced and downsizing is allowed - this will only apply to new replicas
+	// The PVC reconciler will handle the logic to apply the new size only to new instances
+	return nil
 }
 
 // Validate the cluster name. This is important to avoid issues
