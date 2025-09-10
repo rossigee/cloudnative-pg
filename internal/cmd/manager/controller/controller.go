@@ -195,10 +195,15 @@ func RunController(
 
 	webhookServer := mgr.GetWebhookServer().(*webhook.DefaultServer)
 
+	// Use intelligent certificate selection that falls back to standard names
+	// This provides compatibility with both custom certificate providers and cert-manager
 	certName, keyName, err := selectWebhookCertificateNames(conf.WebhookCertDir)
 	if err != nil {
-		setupLog.Error(err, "failed to select webhook certificate names")
-		return err
+		// Fallback to standard Kubernetes certificate names for compatibility
+		// with cert-manager and other standard certificate providers
+		setupLog.Info("Falling back to standard certificate names", "reason", err.Error())
+		certName = "tls.crt"
+		keyName = "tls.key"
 	}
 	webhookServer.Options.CertName = certName
 	webhookServer.Options.KeyName = keyName
