@@ -5711,6 +5711,13 @@ spec:
               storage:
                 description: Configuration of the storage of the instances
                 properties:
+                  allowVolumeDownsizing:
+                    default: false
+                    description: |-
+                      Allow volume size reduction for new replicas, defaults to false.
+                      When enabled, reduced storage sizes will apply only to newly created
+                      replicas, allowing users to rotate away oversized volumes.
+                    type: boolean
                   pvcTemplate:
                     description: Template to be used to generate the Persistent Volume
                       Claim
@@ -5915,7 +5922,8 @@ spec:
                     description: |-
                       Size of the storage. Required if not already specified in the PVC template.
                       Changes to this field are automatically reapplied to the created PVCs.
-                      Size cannot be decreased.
+                      Size increases are applied to existing PVCs. Size decreases require the
+                      AllowVolumeDownsizing flag and only apply to new replicas.
                     type: string
                   storageClass:
                     description: |-
@@ -5963,6 +5971,13 @@ spec:
                     storage:
                       description: The storage configuration for the tablespace
                       properties:
+                        allowVolumeDownsizing:
+                          default: false
+                          description: |-
+                            Allow volume size reduction for new replicas, defaults to false.
+                            When enabled, reduced storage sizes will apply only to newly created
+                            replicas, allowing users to rotate away oversized volumes.
+                          type: boolean
                         pvcTemplate:
                           description: Template to be used to generate the Persistent
                             Volume Claim
@@ -6171,7 +6186,8 @@ spec:
                           description: |-
                             Size of the storage. Required if not already specified in the PVC template.
                             Changes to this field are automatically reapplied to the created PVCs.
-                            Size cannot be decreased.
+                            Size increases are applied to existing PVCs. Size decreases require the
+                            AllowVolumeDownsizing flag and only apply to new replicas.
                           type: string
                         storageClass:
                           description: |-
@@ -6375,6 +6391,13 @@ spec:
                 description: Configuration of the storage for PostgreSQL WAL (Write-Ahead
                   Log)
                 properties:
+                  allowVolumeDownsizing:
+                    default: false
+                    description: |-
+                      Allow volume size reduction for new replicas, defaults to false.
+                      When enabled, reduced storage sizes will apply only to newly created
+                      replicas, allowing users to rotate away oversized volumes.
+                    type: boolean
                   pvcTemplate:
                     description: Template to be used to generate the Persistent Volume
                       Claim
@@ -6579,7 +6602,8 @@ spec:
                     description: |-
                       Size of the storage. Required if not already specified in the PVC template.
                       Changes to this field are automatically reapplied to the created PVCs.
-                      Size cannot be decreased.
+                      Size increases are applied to existing PVCs. Size decreases require the
+                      AllowVolumeDownsizing flag and only apply to new replicas.
                     type: string
                   storageClass:
                     description: |-
