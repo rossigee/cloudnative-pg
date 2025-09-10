@@ -193,7 +193,15 @@ func (r *instanceClientImpl) GetPgControlDataFromInstance(
 	contextLogger := log.FromContext(ctx)
 
 	scheme := GetStatusSchemeFromPod(pod)
-	httpURL := url.Build(scheme.ToString(), pod.Status.PodIP, url.PathPGControlData, url.StatusPort)
+	// Use pod FQDN instead of IP for proper TLS certificate validation
+	var hostname string
+	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
+	} else {
+		// Fallback to pod IP if cluster context is not available
+		hostname = pod.Status.PodIP
+	}
+	httpURL := url.Build(scheme.ToString(), hostname, url.PathPGControlData, url.StatusPort)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, httpURL, nil)
 	if err != nil {
 		return "", err
@@ -251,7 +259,15 @@ func (r *instanceClientImpl) UpgradeInstanceManager(
 	}()
 
 	scheme := GetStatusSchemeFromPod(pod)
-	updateURL := url.Build(scheme.ToString(), pod.Status.PodIP, url.PathUpdate, url.StatusPort)
+	// Use pod FQDN instead of IP for proper TLS certificate validation
+	var hostname string
+	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
+	} else {
+		// Fallback to pod IP if cluster context is not available
+		hostname = pod.Status.PodIP
+	}
+	updateURL := url.Build(scheme.ToString(), hostname, url.PathUpdate, url.StatusPort)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, updateURL, nil)
 	if err != nil {
 		return err
@@ -300,7 +316,16 @@ func (r *instanceClientImpl) rawInstanceStatusRequest(
 	pod corev1.Pod,
 ) (result postgres.PostgresqlStatus) {
 	scheme := GetStatusSchemeFromPod(&pod)
-	statusURL := url.Build(scheme.ToString(), pod.Status.PodIP, url.PathPgStatus, url.StatusPort)
+	// Use pod FQDN instead of IP for proper TLS certificate validation
+	// Format: {pod-name}.{cluster-name}-headless.{namespace}.svc.cluster.local
+	var hostname string
+	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
+	} else {
+		// Fallback to pod IP if cluster context is not available
+		hostname = pod.Status.PodIP
+	}
+	statusURL := url.Build(scheme.ToString(), hostname, url.PathPgStatus, url.StatusPort)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, statusURL, nil)
 	if err != nil {
 		result.Error = err
@@ -381,8 +406,16 @@ func GetStatusSchemeFromPod(pod *corev1.Pod) HTTPScheme {
 func (r *instanceClientImpl) ArchivePartialWAL(ctx context.Context, pod *corev1.Pod) (string, error) {
 	contextLogger := log.FromContext(ctx)
 
-	statusURL := url.Build(
-		GetStatusSchemeFromPod(pod).ToString(), pod.Status.PodIP, url.PathPgArchivePartial, url.StatusPort)
+	scheme := GetStatusSchemeFromPod(pod)
+	// Use pod FQDN instead of IP for proper TLS certificate validation
+	var hostname string
+	if cluster, ok := ctx.Value(contextutils.ContextKeyCluster).(*apiv1.Cluster); ok && cluster != nil {
+		hostname = fmt.Sprintf("%s.%s-headless.%s.svc.cluster.local", pod.Name, cluster.Name, pod.Namespace)
+	} else {
+		// Fallback to pod IP if cluster context is not available
+		hostname = pod.Status.PodIP
+	}
+	statusURL := url.Build(scheme.ToString(), hostname, url.PathPgArchivePartial, url.StatusPort)
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, statusURL, nil)
 	if err != nil {
 		return "", err
