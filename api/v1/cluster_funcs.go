@@ -1394,6 +1394,7 @@ func (cluster *Cluster) GetSecurityContext() *corev1.SecurityContext {
 	}
 	return defaultContext
 }
+
 // GetCoredumpFilter get the coredump filter value from the cluster annotation
 func (cluster *Cluster) GetCoredumpFilter() string {
 	value, ok := cluster.Annotations[utils.CoredumpFilter]
