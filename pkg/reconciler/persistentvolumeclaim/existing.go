@@ -139,7 +139,8 @@ func reconcilePVCQuantity(
 	case 0:
 		return nil
 	case 1:
-		contextLogger.Warning("cannot decrease storage requirement",
+		contextLogger.Warning("cannot decrease storage requirement on existing PVC, "+
+			"reduced size will only apply to new replicas",
 			"from", currentSize, "to", parsedSize,
 			"pvcName", pvc.Name)
 		return nil

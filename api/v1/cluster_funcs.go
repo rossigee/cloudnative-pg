@@ -830,6 +830,26 @@ func (cluster *Cluster) ShouldResizeInUseVolumes() bool {
 	return *cluster.Spec.StorageConfiguration.ResizeInUseVolumes
 }
 
+// AllowsVolumeDownsizing returns true when volume size reductions are allowed
+// for new replicas in this cluster
+func (cluster *Cluster) AllowsVolumeDownsizing() bool {
+	if cluster.Spec.StorageConfiguration.AllowVolumeDownsizing == nil {
+		return false
+	}
+
+	return *cluster.Spec.StorageConfiguration.AllowVolumeDownsizing
+}
+
+// AllowsWalVolumeDownsizing returns true when WAL volume size reductions are allowed
+// for new replicas in this cluster
+func (cluster *Cluster) AllowsWalVolumeDownsizing() bool {
+	if cluster.Spec.WalStorage == nil || cluster.Spec.WalStorage.AllowVolumeDownsizing == nil {
+		return false
+	}
+
+	return *cluster.Spec.WalStorage.AllowVolumeDownsizing
+}
+
 // ShouldCreateApplicationSecret returns true if for this cluster,
 // during the bootstrap phase, we need to create a secret to store application credentials
 func (cluster *Cluster) ShouldCreateApplicationSecret() bool {
