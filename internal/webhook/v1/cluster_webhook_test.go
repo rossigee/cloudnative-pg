@@ -3903,6 +3903,52 @@ var _ = Describe("Storage configuration validation", func() {
 			Expect(v.validateStorageSize(cluster)).To(BeEmpty())
 		})
 	})
+
+	When("validating storage configuration changes", func() {
+		It("allows volume downsizing when allowVolumeDownsizing is enabled", func() {
+			allowDownsizing := true
+			oldStorage := apiv1.StorageConfiguration{Size: "10Gi"}
+			newStorage := apiv1.StorageConfiguration{
+				Size:                  "5Gi",
+				AllowVolumeDownsizing: &allowDownsizing,
+			}
+
+			errs := validateStorageConfigurationChange(
+				field.NewPath("spec", "storage"),
+				oldStorage,
+				newStorage,
+				true,
+			)
+			Expect(errs).To(BeEmpty())
+		})
+
+		It("rejects volume downsizing when allowVolumeDownsizing is disabled", func() {
+			oldStorage := apiv1.StorageConfiguration{Size: "10Gi"}
+			newStorage := apiv1.StorageConfiguration{Size: "5Gi"}
+
+			errs := validateStorageConfigurationChange(
+				field.NewPath("spec", "storage"),
+				oldStorage,
+				newStorage,
+				false,
+			)
+			Expect(errs).To(HaveLen(1))
+			Expect(errs[0].Error()).To(ContainSubstring("without enabling allowVolumeDownsizing"))
+		})
+
+		It("allows volume increases regardless of allowVolumeDownsizing setting", func() {
+			oldStorage := apiv1.StorageConfiguration{Size: "5Gi"}
+			newStorage := apiv1.StorageConfiguration{Size: "10Gi"}
+
+			errs := validateStorageConfigurationChange(
+				field.NewPath("spec", "storage"),
+				oldStorage,
+				newStorage,
+				false,
+			)
+			Expect(errs).To(BeEmpty())
+		})
+	})
 })
 
 var _ = Describe("Ephemeral volume configuration validation", func() {
