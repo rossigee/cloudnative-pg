@@ -844,6 +844,7 @@ externalclusters
 facto
 failover
 failoverDelay
+failoverQuorum
 failoverquorums
 failovers
 failureThreshold
@@ -1125,7 +1126,10 @@ pgBouncerIntegration
 pgBouncerSecrets
 pgDataImageInfo
 pgDumpExtraOptions
+pgRestoreDataOptions
 pgRestoreExtraOptions
+pgRestorePostdataOptions
+pgRestorePredataOptions
 pgRouting
 pgSQL
 pgadmin
