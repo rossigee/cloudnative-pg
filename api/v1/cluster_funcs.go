@@ -1342,36 +1342,10 @@ func (cluster *Cluster) GetPodSecurityContext() *corev1.PodSecurityContext {
 	return defaultContext
 }
 
-// GetSecurityContext return the proper SecurityContext in the cluster for Containers in Pods
-func (cluster *Cluster) GetSecurityContext() *corev1.SecurityContext {
-	trueValue := true
-	falseValue := false
-
-	uid := cluster.GetPostgresUID()
-	gid := cluster.GetPostgresGID()
-
-	defaultContext := &corev1.SecurityContext{
-		SeccompProfile: cluster.GetSeccompProfile(),
-		RunAsUser:      &uid,
-		RunAsGroup:     &gid,
-		Capabilities: &corev1.Capabilities{
-			Drop: []corev1.Capability{
-				"ALL",
-			},
-		},
-		Privileged:               &falseValue,
-		RunAsNonRoot:             &trueValue,
-		ReadOnlyRootFilesystem:   &trueValue,
-		AllowPrivilegeEscalation: &falseValue,
-	}
-	if cluster.Spec.SecurityContext != nil {
-		return mergeSecurityContextDefaults(cluster.Spec.SecurityContext, defaultContext)
-	}
-	return defaultContext
-}
-
-// mergeSecurityContextDefaults merges the defined security context with defaults
-func mergeSecurityContextDefaults(definedContext, defaultContext *corev1.SecurityContext) *corev1.SecurityContext {
+// mergeSecurityContextDefaults merges user-defined security context with default values
+func (cluster *Cluster) mergeSecurityContextDefaults(
+	definedContext, defaultContext *corev1.SecurityContext,
+) *corev1.SecurityContext {
 	if definedContext.RunAsUser == nil {
 		definedContext.RunAsUser = defaultContext.RunAsUser
 	}
@@ -1397,6 +1371,34 @@ func mergeSecurityContextDefaults(definedContext, defaultContext *corev1.Securit
 		definedContext.AllowPrivilegeEscalation = defaultContext.AllowPrivilegeEscalation
 	}
 	return definedContext
+}
+
+// GetSecurityContext return the proper SecurityContext in the cluster for Containers in Pods
+func (cluster *Cluster) GetSecurityContext() *corev1.SecurityContext {
+	trueValue := true
+	falseValue := false
+
+	uid := cluster.GetPostgresUID()
+	gid := cluster.GetPostgresGID()
+
+	defaultContext := &corev1.SecurityContext{
+		SeccompProfile: cluster.GetSeccompProfile(),
+		RunAsUser:      &uid,
+		RunAsGroup:     &gid,
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{
+				"ALL",
+			},
+		},
+		Privileged:               &falseValue,
+		RunAsNonRoot:             &trueValue,
+		ReadOnlyRootFilesystem:   &trueValue,
+		AllowPrivilegeEscalation: &falseValue,
+	}
+	if cluster.Spec.SecurityContext != nil {
+		return cluster.mergeSecurityContextDefaults(cluster.Spec.SecurityContext, defaultContext)
+	}
+	return defaultContext
 }
 
 // GetCoredumpFilter get the coredump filter value from the cluster annotation
