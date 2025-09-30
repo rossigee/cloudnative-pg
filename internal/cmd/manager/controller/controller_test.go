@@ -47,10 +47,10 @@ var _ = Describe("selectWebhookCertificateNames", func() {
 			apiserverCertPath := filepath.Join(tempDir, "apiserver.crt")
 			apiserverKeyPath := filepath.Join(tempDir, "apiserver.key")
 
-			err := os.WriteFile(apiserverCertPath, []byte("cert content"), 0600)
+			err := os.WriteFile(apiserverCertPath, []byte("cert content"), 0o600)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = os.WriteFile(apiserverKeyPath, []byte("key content"), 0600)
+			err = os.WriteFile(apiserverKeyPath, []byte("key content"), 0o600)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -68,10 +68,10 @@ var _ = Describe("selectWebhookCertificateNames", func() {
 			tlsCertPath := filepath.Join(tempDir, "tls.crt")
 			tlsKeyPath := filepath.Join(tempDir, "tls.key")
 
-			err := os.WriteFile(tlsCertPath, []byte("cert content"), 0600)
+			err := os.WriteFile(tlsCertPath, []byte("cert content"), 0o600)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = os.WriteFile(tlsKeyPath, []byte("key content"), 0600)
+			err = os.WriteFile(tlsKeyPath, []byte("key content"), 0o600)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -89,7 +89,7 @@ var _ = Describe("selectWebhookCertificateNames", func() {
 			files := []string{"apiserver.crt", "apiserver.key", "tls.crt", "tls.key"}
 			for _, file := range files {
 				filePath := filepath.Join(tempDir, file)
-				err := os.WriteFile(filePath, []byte("content"), 0600)
+				err := os.WriteFile(filePath, []byte("content"), 0o600)
 				Expect(err).ToNot(HaveOccurred())
 			}
 		})
@@ -107,7 +107,7 @@ var _ = Describe("selectWebhookCertificateNames", func() {
 			BeforeEach(func() {
 				// Create only the certificate file, not the key
 				apiserverCertPath := filepath.Join(tempDir, "apiserver.crt")
-				err := os.WriteFile(apiserverCertPath, []byte("cert content"), 0600)
+				err := os.WriteFile(apiserverCertPath, []byte("cert content"), 0o600)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -124,7 +124,7 @@ var _ = Describe("selectWebhookCertificateNames", func() {
 			BeforeEach(func() {
 				// Create only the key file, not the certificate
 				apiserverKeyPath := filepath.Join(tempDir, "apiserver.key")
-				err := os.WriteFile(apiserverKeyPath, []byte("key content"), 0600)
+				err := os.WriteFile(apiserverKeyPath, []byte("key content"), 0o600)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
@@ -141,7 +141,7 @@ var _ = Describe("selectWebhookCertificateNames", func() {
 			BeforeEach(func() {
 				// Create only the certificate file, not the key
 				tlsCertPath := filepath.Join(tempDir, "tls.crt")
-				err := os.WriteFile(tlsCertPath, []byte("cert content"), 0600)
+				err := os.WriteFile(tlsCertPath, []byte("cert content"), 0o600)
 				Expect(err).ToNot(HaveOccurred())
 			})
 
