@@ -1345,34 +1345,40 @@ func (cluster *Cluster) GetSecurityContext() *corev1.SecurityContext {
 		AllowPrivilegeEscalation: &falseValue,
 	}
 	if cluster.Spec.SecurityContext != nil {
-		definedContext := cluster.Spec.SecurityContext
-		if definedContext.RunAsUser == nil {
-			definedContext.RunAsUser = defaultContext.RunAsUser
-		}
-		if definedContext.RunAsGroup == nil {
-			definedContext.RunAsGroup = defaultContext.RunAsGroup
-		}
-		if definedContext.SeccompProfile == nil {
-			definedContext.SeccompProfile = defaultContext.SeccompProfile
-		}
-		if definedContext.Capabilities == nil {
-			definedContext.Capabilities = defaultContext.Capabilities
-		}
-		if definedContext.Privileged == nil {
-			definedContext.Privileged = defaultContext.Privileged
-		}
-		if definedContext.RunAsNonRoot == nil {
-			definedContext.RunAsNonRoot = defaultContext.RunAsNonRoot
-		}
-		if definedContext.ReadOnlyRootFilesystem == nil {
-			definedContext.ReadOnlyRootFilesystem = defaultContext.ReadOnlyRootFilesystem
-		}
-		if definedContext.AllowPrivilegeEscalation == nil {
-			definedContext.AllowPrivilegeEscalation = defaultContext.AllowPrivilegeEscalation
-		}
-		return definedContext
+		return cluster.mergeSecurityContextDefaults(cluster.Spec.SecurityContext, defaultContext)
 	}
 	return defaultContext
+}
+
+// mergeSecurityContextDefaults merges user-defined security context with defaults
+func (cluster *Cluster) mergeSecurityContextDefaults(
+	definedContext, defaultContext *corev1.SecurityContext,
+) *corev1.SecurityContext {
+	if definedContext.RunAsUser == nil {
+		definedContext.RunAsUser = defaultContext.RunAsUser
+	}
+	if definedContext.RunAsGroup == nil {
+		definedContext.RunAsGroup = defaultContext.RunAsGroup
+	}
+	if definedContext.SeccompProfile == nil {
+		definedContext.SeccompProfile = defaultContext.SeccompProfile
+	}
+	if definedContext.Capabilities == nil {
+		definedContext.Capabilities = defaultContext.Capabilities
+	}
+	if definedContext.Privileged == nil {
+		definedContext.Privileged = defaultContext.Privileged
+	}
+	if definedContext.RunAsNonRoot == nil {
+		definedContext.RunAsNonRoot = defaultContext.RunAsNonRoot
+	}
+	if definedContext.ReadOnlyRootFilesystem == nil {
+		definedContext.ReadOnlyRootFilesystem = defaultContext.ReadOnlyRootFilesystem
+	}
+	if definedContext.AllowPrivilegeEscalation == nil {
+		definedContext.AllowPrivilegeEscalation = defaultContext.AllowPrivilegeEscalation
+	}
+	return definedContext
 }
 
 // GetCoredumpFilter get the coredump filter value from the cluster annotation
