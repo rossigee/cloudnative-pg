@@ -2222,6 +2222,14 @@ type MonitoringConfiguration struct {
 	// you need this functionality, you can create a PodMonitor manually.
 	// +optional
 	PodMonitorRelabelConfigs []monitoringv1.RelabelConfig `json:"podMonitorRelabelings,omitempty"`
+
+	// The interval during which metrics computed from queries are considered current.
+	// Once it is exceeded, a new scrape will trigger a rerun
+	// of the queries.
+	// If not set, defaults to 30 seconds, in line with Prometheus scraping defaults.
+	// Setting this to zero disables the caching mechanism and can cause heavy load on the PostgreSQL server.
+	// +optional
+	MetricsQueriesTTL *metav1.Duration `json:"metricsQueriesTTL,omitempty"`
 }
 
 // ClusterMonitoringTLSConfiguration is the type containing the TLS configuration
@@ -2363,8 +2371,9 @@ type PluginConfiguration struct {
 	// +optional
 	Enabled *bool `json:"enabled,omitempty"`
 
-	// Only one plugin can be declared as WALArchiver.
-	// Cannot be active if ".spec.backup.barmanObjectStore" configuration is present.
+	// Marks the plugin as the WAL archiver. At most one plugin can be
+	// designated as a WAL archiver. This cannot be enabled if the
+	// `.spec.backup.barmanObjectStore` configuration is present.
 	// +kubebuilder:default:=false
 	// +optional
 	IsWALArchiver *bool `json:"isWALArchiver,omitempty"`

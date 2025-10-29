@@ -4000,6 +4000,17 @@ you need this functionality, you can create a PodMonitor manually.</p>
 you need this functionality, you can create a PodMonitor manually.</p>
 </td>
 </tr>
+<tr><td><code>metricsQueriesTTL</code><br/>
+<a href="https://pkg.go.dev/k8s.io/apimachinery/pkg/apis/meta/v1#Duration"><i>meta/v1.Duration</i></a>
+</td>
+<td>
+   <p>The interval during which metrics computed from queries are considered current.
+Once it is exceeded, a new scrape will trigger a rerun
+of the queries.
+If not set, defaults to 30 seconds, in line with Prometheus scraping defaults.
+Setting this to zero disables the caching mechanism and can cause heavy load on the PostgreSQL server.</p>
+</td>
+</tr>
 </tbody>
 </table>
 
@@ -4242,6 +4253,39 @@ by pgbouncer</p>
    <p>The pool mode. Default: <code>session</code>.</p>
 </td>
 </tr>
+<tr><td><code>serverTLSSecret</code><br/>
+<a href="https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api/#LocalObjectReference"><i>github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference</i></a>
+</td>
+<td>
+   <p>ServerTLSSecret, when pointing to a TLS secret, provides pgbouncer's
+<code>server_tls_key_file</code> and <code>server_tls_cert_file</code>, used when
+authenticating against PostgreSQL.</p>
+</td>
+</tr>
+<tr><td><code>serverCASecret</code><br/>
+<a href="https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api/#LocalObjectReference"><i>github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference</i></a>
+</td>
+<td>
+   <p>ServerCASecret provides PgBouncer’s server_tls_ca_file, the root
+CA for validating PostgreSQL certificates</p>
+</td>
+</tr>
+<tr><td><code>clientCASecret</code><br/>
+<a href="https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api/#LocalObjectReference"><i>github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference</i></a>
+</td>
+<td>
+   <p>ClientCASecret provides PgBouncer’s client_tls_ca_file, the root
+CA for validating client certificates</p>
+</td>
+</tr>
+<tr><td><code>clientTLSSecret</code><br/>
+<a href="https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api/#LocalObjectReference"><i>github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference</i></a>
+</td>
+<td>
+   <p>ClientTLSSecret provides PgBouncer’s client_tls_key_file (private key)
+and client_tls_cert_file (certificate) used to accept client connections</p>
+</td>
+</tr>
 <tr><td><code>authQuerySecret</code><br/>
 <a href="https://pkg.go.dev/github.com/cloudnative-pg/machinery/pkg/api/#LocalObjectReference"><i>github.com/cloudnative-pg/machinery/pkg/api.LocalObjectReference</i></a>
 </td>
@@ -4250,6 +4294,7 @@ by pgbouncer</p>
 query. In case it is specified, also an AuthQuery
 (e.g. &quot;SELECT usename, passwd FROM pg_catalog.pg_shadow WHERE usename=$1&quot;)
 has to be specified and no automatic CNPG Cluster integration will be triggered.</p>
+<p>Deprecated.</p>
 </td>
 </tr>
 <tr><td><code>authQuery</code><br/>
@@ -4326,8 +4371,9 @@ cluster to be reconciled</p>
 <i>bool</i>
 </td>
 <td>
-   <p>Only one plugin can be declared as WALArchiver.
-Cannot be active if &quot;.spec.backup.barmanObjectStore&quot; configuration is present.</p>
+   <p>Marks the plugin as the WAL archiver. At most one plugin can be
+designated as a WAL archiver. This cannot be enabled if the
+<code>.spec.backup.barmanObjectStore</code> configuration is present.</p>
 </td>
 </tr>
 <tr><td><code>parameters</code><br/>
@@ -4552,6 +4598,13 @@ part for now.</p>
 <table class="table">
 <thead><tr><th width="30%">Field</th><th>Description</th></tr></thead>
 <tbody>
+<tr><td><code>clientTLS</code><br/>
+<a href="#postgresql-cnpg-io-v1-SecretVersion"><i>SecretVersion</i></a>
+</td>
+<td>
+   <p>The client TLS secret version</p>
+</td>
+</tr>
 <tr><td><code>serverTLS</code><br/>
 <a href="#postgresql-cnpg-io-v1-SecretVersion"><i>SecretVersion</i></a>
 </td>
